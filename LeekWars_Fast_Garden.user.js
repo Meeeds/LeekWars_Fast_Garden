@@ -6,7 +6,7 @@
 // @include     http://leekwars.com/index.php?page=garden
 // @downloadURL https://github.com/Foudge/LeekWars_Fast_Garden/raw/dev/LeekWars_Fast_Garden.user.js
 // @updateURL   https://github.com/Foudge/LeekWars_Fast_Garden/raw/dev/LeekWars_Fast_Garden.user.js
-// @version     0.0.12
+// @version     0.0.13
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     http://code.jquery.com/jquery-2.1.1.min.js
@@ -112,10 +112,44 @@ function mySubmitForm(page, params){
       console.log('Adversaire ' + name + ' retiré de la liste car plus proposé dans le potager');
       var el = $('#' + targetId);
       if (el) el.css({ opacity: 0.3 });
+      
+      genererateNewFight();
+      
     }
     console.log("Rechargement du potager...");
     reloadGarden(myId, fightType);
   });
+}
+
+function genererateNewFight()
+{
+    if(really_really_fast_garden){
+        //lancé le combat solo suivant
+        if($(".leek.enemy").size()>0){
+          var myNewId = $(".leek.enemy").first().parent().attr('leek');
+          console.log("relanching solo fight " + myNewId + " against " + $(".leek.enemy").first().attr('id'));
+          mySubmitForm("garden_update", [
+                ['leek_id', myNewId],
+                ['enemy_id', $(".leek.enemy").first().attr('id')]
+            ]);
+        //lancé le combat eleveur suivant
+        } else if($('.enemy.farmer').size()>0){
+          console.log("relanching farmer fight on " + $('.enemy.farmer').first().attr('id'));
+          mySubmitForm("garden_update", [
+              ['target_farmer', $('.enemy.farmer').first().attr('id')]
+            ]);
+        //lancé le combat d'équipe suivant
+        } else if ($('.enemyCompo').size()>0){
+          console.log("relanching team fight " + $('.enemyCompo').first().parent().attr('compo') + " vs " + $('.enemyCompo').first().attr('id'));
+          var myNewTeamId = $('.enemyCompo').first().parent().attr('compo');      
+          mySubmitForm("garden_update", [
+              ['my_team', myNewTeamId],
+              ['target_team', $('.enemyCompo').first().attr('id')]
+          ]);
+        } else {
+          console.log("no more solo or farmer fights : " + $(".leek.enemy").size() + "-" + $('.enemy.farmer').size() + "-" + $('.enemyCompo').size());
+        }
+    }
 }
 
 function reloadGarden(myId, fightType)
@@ -201,33 +235,7 @@ function checkFightResult(fight)
       }
     }
     
-    if(really_really_fast_garden){
-        //lancé le combat solo suivant
-        if($(".leek.enemy").size()>0){
-          var myNewId = $(".leek.enemy").first().parent().attr('leek');
-          console.log("relanching solo fight " + myNewId + " against " + $(".leek.enemy").first().attr('id'));
-          mySubmitForm("garden_update", [
-                ['leek_id', myNewId],
-                ['enemy_id', $(".leek.enemy").first().attr('id')]
-            ]);
-        //lancé le combat eleveur suivant
-        } else if($('.enemy.farmer').size()>0){
-          console.log("relanching farmer fight on " + $('.enemy.farmer').first().attr('id'));
-          mySubmitForm("garden_update", [
-              ['target_farmer', $('.enemy.farmer').first().attr('id')]
-            ]);
-        //lancé le combat d'équipe suivant
-        } else if ($('.enemyCompo').size()>0){
-          console.log("relanching team fight " + $('.enemyCompo').first().parent().attr('compo') + " vs " + $('.enemyCompo').first().attr('id'));
-          var myNewTeamId = $('.enemyCompo').first().parent().attr('compo');      
-          mySubmitForm("garden_update", [
-              ['my_team', myNewTeamId],
-              ['target_team', $('.enemyCompo').first().attr('id')]
-          ]);
-        } else {
-          console.log("no more solo or farmer fights : " + $(".leek.enemy").size() + "-" + $('.enemy.farmer').size() + "-" + $('.enemyCompo').size());
-        }
-    }
+    genererateNewFight();
     
     var $res = $(res);
     var duration = $res.find("#duration").text();
